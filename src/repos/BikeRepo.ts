@@ -1,19 +1,22 @@
-import { FindOptions, UpdateOptions } from "sequelize";
+import { FindOptions, UpdateOptions, where } from "sequelize";
 import { IBikeRepo } from "../interfaces/IBikeRepo";
 import BikeModel from "../../database/models/BikeModel";
 import { Bike } from "../bike";
 
 class BikeRepo implements IBikeRepo {
-    async find(id: FindOptions): Promise<Bike> {
+    async find(whereOptions: any): Promise<Bike> {
         try{
-            return await BikeModel.findOne(id);
+            return await BikeModel.findOne({
+                raw: true,
+                where: whereOptions,
+            });
         }
         catch(error){
             throw new Error(error.message)
         }
     }
 
-    async add(bike: Bike): Promise<string> {
+    async add(bike: Bike): Promise<Bike> {
         try{
             return await BikeModel.create(bike);
         }
@@ -22,18 +25,20 @@ class BikeRepo implements IBikeRepo {
         }
     }
 
-    async remove(id: FindOptions): Promise<void> {
+    async remove(whereOptions: any): Promise<void> {
         try{
-            await BikeModel.destroy(id);
+            await BikeModel.destroy({where: whereOptions});
         }
         catch(error){
             throw new Error(error.message)
         }
     }
 
-    async update(id: Omit<UpdateOptions, 'returning'>, bike: Bike): Promise<void> {
+    async update(bike: Bike, whereOptions: any): Promise<void> {
         try{
-            await BikeModel.update(bike, id);
+            await BikeModel.update(bike, {
+                where: whereOptions
+            });
         }
         catch(error){
             throw new Error(error.message)
@@ -41,7 +46,7 @@ class BikeRepo implements IBikeRepo {
     }
 
     async list(): Promise<Bike[]> {
-        return await BikeModel.findAll();
+        return await BikeModel.findAll({raw: true});
     }
 }
 

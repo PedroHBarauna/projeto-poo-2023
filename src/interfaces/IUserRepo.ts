@@ -2,8 +2,8 @@ import { FindOptions } from "sequelize";
 import { User } from "../user";
 
 export interface IUserRepo {
-    find(email: FindOptions): Promise<User>
+    find(email: any): Promise<User>
     add(user: User): Promise<User>
-    remove(email: FindOptions): Promise<void>
+    remove(email: any): Promise<void>
     list(): Promise<User[]>
 }

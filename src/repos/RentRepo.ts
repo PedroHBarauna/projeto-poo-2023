@@ -4,53 +4,62 @@ import { Rent } from "../rent";
 
 class RentRepo implements IRentRepo {
     async add(rent: Rent): Promise<Rent> {
-        try{
+        try {
             return await RentModel.create(rent);
         }
-        catch(error){
+        catch (error) {
             throw new Error(error.message)
         }
     }
-    
-    async findOpen(bikeId: string, userEmail: string): Promise<Rent> {
-        try{
+
+    async findOpen(bikeId: string, userId: string): Promise<Rent> {
+        try {
             return await RentModel.findOne({
+                raw: true,
                 where: {
                     bikeId,
-                    userEmail,
-                    finishedAt: null
+                    userId,
+                    end: null
                 }
             });
         }
-        catch(error){
+        catch (error) {
             throw new Error(error.message)
         }
     }
 
-    async findOpenFor(userEmail: string): Promise<Rent[]> {
-        try{
+    async findOpenFor(userId: string): Promise<Rent[]> {
+        try {
             return await RentModel.findAll({
+                raw: true,
                 where: {
-                    userEmail,
-                    finishedAt: null
+                    userId,
+                    end: null
                 }
             });
         }
-        catch(error){
+        catch (error) {
             throw new Error(error.message)
         }
     }
 
-    async update(id: string, rent: Rent): Promise<void> {
-        try{
-            await RentModel.update(rent, {where: {id}});
+    async update(rent: Rent, whereOptions: any): Promise<void> {
+        try {
+            await RentModel.update(rent, { where: whereOptions });
         }
-        catch(error){
+        catch (error) {
             throw new Error(error.message)
         }
     }
 
     async list(): Promise<Rent[]> {
-        return await RentModel.findAll();
+        try {
+            return await RentModel.findAll({ raw: true });
+        }
+        catch (error) {
+            throw new Error(error.message)
+        }
     }
 }
+
+export default new RentRepo();

@@ -10,21 +10,21 @@ import { DuplicateUserError } from "./errors/duplicate-user-error";
 import { UserHasOpenRentError } from "./errors/user-has-open-rent-error";
 import { FindOptions } from "sequelize";
 import { IUserRepo } from "./interfaces/IUserRepo";
+import { IBikeRepo } from "./interfaces/IBikeRepo";
+import { IRentRepo } from "./interfaces/IRentRepo";
 
 export class App {
     crypt: Crypt = new Crypt()
 
     constructor(
         readonly userRepo: IUserRepo,
-        // readonly bikeRepo: IBikeRepo,
-        // readonly rentRepo: IRentRepo
+        readonly bikeRepo: IBikeRepo,
+        readonly rentRepo: IRentRepo
     ) {}
 
     async findUser(email: string): Promise<User> {
-        const whereOptions: FindOptions = {
-            where: {
-                email
-            }
+        const whereOptions: any = {
+            email
         }
 
         const user = await this.userRepo.find(whereOptions)
@@ -33,10 +33,8 @@ export class App {
     }
 
     async registerUser(user: User): Promise<string> {
-        const whereOptions: FindOptions = {
-            where: {
-                email: user.email
-            }
+        const whereOptions: any = {
+            email: user.email
         }
 
         const userFound = await this.userRepo.find(whereOptions)
@@ -54,67 +52,99 @@ export class App {
         return usuarioCriado.id
     }
 
-    // async authenticate(userEmail: string, password: string): Promise<boolean> {
-    //     const user = await this.findUser(userEmail)
-    //     return await this.crypt.compare(password, user.password)
-    // }
+    async authenticate(userEmail: string, password: string): Promise<boolean> {
+        const user = await this.findUser(userEmail)
+        return await this.crypt.compare(password, user.password)
+    }
 
-    // async registerBike(bike: Bike): Promise<string> {
-    //     return await this.bikeRepo.add(bike)
-    // }
+    async registerBike(bike: Bike): Promise<Bike> {
+        return await this.bikeRepo.add(bike)
+    }
 
-    // async removeUser(email: string): Promise<void> {
-    //     await this.findUser(email)
-    //     if ((await this.rentRepo.findOpenFor(email)).length > 0) {
-    //         throw new UserHasOpenRentError()
-    //     }
-    //     await this.userRepo.remove(email)
-    // }
+    async removeUser(email: string): Promise<void> {
+        await this.findUser(email)
+        if ((await this.rentRepo.findOpenFor(email)).length > 0) {
+            throw new UserHasOpenRentError()
+        }
+        const whereOptions: any = {
+            email
+        }
+
+        await this.userRepo.remove(email)
+    }
     
-    // async rentBike(bikeId: string, userEmail: string): Promise<string> {
-    //     const bike = await this.findBike(bikeId)
-    //     if (!bike.available) {
-    //         throw new UnavailableBikeError()
-    //     }
-    //     const user = await this.findUser(userEmail)
-    //     bike.available = false
-    //     await this.bikeRepo.update(bikeId, bike)
-    //     const newRent = new Rent(bike, user, new Date())
-    //     return await this.rentRepo.add(newRent)
-    // }
+    async rentBike(bikeId: string, userEmail: string): Promise<Rent> {
+        const bike = await this.findBike(bikeId)
+        if (!bike.available) {
+            throw new UnavailableBikeError()
+        }
+        const user = await this.findUser(userEmail)
+        bike.available = false
+        const whereOptions = {
+            id: bikeId
+        }
+        await this.bikeRepo.update(bike, whereOptions)
+        const newRent = new Rent(bikeId, user.id, new Date(), '1')
+        return await this.rentRepo.add(newRent)
+    }
 
-    // async returnBike(bikeId: string, userEmail: string): Promise<number> {
-    //     const now = new Date()
-    //     const rent = await this.rentRepo.findOpen(bikeId, userEmail)
-    //     if (!rent) throw new Error('Rent not found.')
-    //     rent.end = now
-    //     await this.rentRepo.update(rent.id, rent)
-    //     rent.bike.available = true
-    //     await this.bikeRepo.update(rent.bike.id, rent.bike)
-    //     const hours = diffHours(rent.end, rent.start)
-    //     return hours * rent.bike.rate
-    // }
+    async returnBike(bikeId: string, userId: string): Promise<number> {
+        const now = new Date()
+        now.setHours(now.getHours() + 3);
+        const rent = await this.rentRepo.findOpen(bikeId, userId)
+        if (!rent) throw new Error('Rent not found.')
+        rent.end = now
 
-    // async listUsers(): Promise<User[]> {
-    //     return await this.userRepo.list()
-    // }
+        const whereOptions = {
+            id: rent.id
+        }
+        
+        await this.rentRepo.update(rent, whereOptions)
+        const bike = await this.findBike(rent.bikeId)
+        bike.available = true
 
-    // async listBikes(): Promise<Bike[]> {
-    //     return await this.bikeRepo.list()
-    // }
+        const whereOptionsBike = {
+            id: bike.id
+        }
 
-    // async moveBikeTo(bikeId: string, location: Location) {
-    //     const bike = await this.findBike(bikeId)
-    //     bike.location.latitude = location.latitude
-    //     bike.location.longitude = location.longitude
-    //     await this.bikeRepo.update(bikeId, bike)
-    // }
+        await this.bikeRepo.update(bike, whereOptionsBike)
+        const hours = diffHours(rent.end, rent.start)
+        return hours * bike.rate
+    }
 
-    // async findBike(bikeId: string): Promise<Bike> {
-    //     const bike = await this.bikeRepo.find(bikeId)
-    //     if (!bike) throw new BikeNotFoundError()
-    //     return bike
-    // }
+    async listUsers(): Promise<User[]> {
+        return await this.userRepo.list()
+    }
+
+    async listBikes(): Promise<Bike[]> {
+        return await this.bikeRepo.list()
+    }
+
+    async listRent(): Promise<Rent[]>{
+        return await this.rentRepo.list()
+    }
+
+    async moveBikeTo(bikeId: string, location: Location) {
+        const whereOptions = {
+                id: bikeId
+            }
+
+        const bike = await this.findBike(bikeId)
+        console.log(bike)
+        bike.latitude = location.latitude
+        bike.longitude = location.longitude
+        await this.bikeRepo.update(bike, whereOptions)
+    }
+
+    async findBike(bikeId: string): Promise<Bike> {
+        const whereOptions = {
+            id: bikeId
+        }
+
+        const bike = await this.bikeRepo.find(whereOptions)
+        if (!bike) throw new BikeNotFoundError()
+        return bike
+    }
 }
 
 function diffHours(dt2: Date, dt1: Date) {

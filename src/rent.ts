@@ -5,8 +5,8 @@ export class Rent {
     public end: Date = undefined
 
     constructor(
-        public bike: Bike,
-        public user: User,
+        public bikeId: string,
+        public userId: string,
         public start: Date,
         public id?: string
     ) {}

@@ -4,9 +4,12 @@ import { User } from "../user"
 import { FindOptions, Optional } from "sequelize"
 
 class UserRepo implements IUserRepo {
-    async find(email: FindOptions): Promise<User> {
+    async find(email: any): Promise<User> {
         try{
-            return await UserModel.findOne(email);
+            return await UserModel.findOne({
+                raw: true,
+                where: email
+            });
         }
         catch(error){
             throw new Error(error.message)
@@ -16,16 +19,20 @@ class UserRepo implements IUserRepo {
 
     async add(user: User): Promise<User> {
         try{
-            return await UserModel.create(user);
+            return await UserModel.create(user, {
+                raw: true
+            });
         }
         catch(error){
             throw new Error(error.message)
         }
     }
 
-    async remove(email: FindOptions): Promise<void> {
+    async remove(email: any): Promise<void> {
         try{
-            await UserModel.destroy(email);
+            await UserModel.destroy({
+                where: email
+            });
         }
         catch(error){
             throw new Error(error.message)
@@ -33,7 +40,9 @@ class UserRepo implements IUserRepo {
     }
 
     async list(): Promise<User[]> {
-        return await UserModel.findAll();
+        return await UserModel.findAll({
+            raw: true
+        });
     }
 }
 

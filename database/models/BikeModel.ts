@@ -5,7 +5,6 @@ import RentModel from './RentModel';
 interface BikeAttributes {
     id: string;
     name: string;
-    price: number;
     type: string;
     bodySize: number;
     maxLoad: number;
@@ -27,9 +26,6 @@ class Bike extends Model<BikeAttributes, BikeCreationAttributes> implements Bike
 
     @Column
     name: string;
-
-    @Column
-    price: number;
 
     @Column
     type: string;

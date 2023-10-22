@@ -2,9 +2,9 @@ import { FindOptions } from "sequelize";
 import { Bike } from "../bike"
 
 export interface IBikeRepo {
-    find(id: FindOptions): Promise<Bike>
-    add(bike: Bike): Promise<string>
+    find(id: any): Promise<Bike>
+    add(bike: Bike): Promise<Bike>
     remove(id: FindOptions): Promise<void>
-    update(id: FindOptions, bike: Bike): Promise<void>
+    update(bike: Bike, id: any): Promise<void>
     list(): Promise<Bike[]>
 }

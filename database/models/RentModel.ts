@@ -5,10 +5,10 @@ import { Optional } from 'sequelize';
 
 interface RentAttributes {
     id: string;
-    bike: BikeModel;
-    user: UserModel;
-    startTime: Date;
-    endTime: Date;
+    bikeId: string;
+    userId: string;
+    start: Date;
+    end: Date;
 }
 
 interface RentCreationAttributes extends Optional<RentAttributes, 'id'> {}
@@ -33,10 +33,10 @@ class Rent extends Model<RentAttributes, RentCreationAttributes> implements Rent
     user: UserModel;
 
     @Column
-    startTime: Date;
+    start: Date;
 
     @Column
-    endTime: Date;
+    end: Date;
 }
 
 export default Rent;
