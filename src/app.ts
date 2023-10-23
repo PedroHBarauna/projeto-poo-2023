@@ -8,7 +8,7 @@ import { UnavailableBikeError } from "./errors/unavailable-bike-error";
 import { UserNotFoundError } from "./errors/user-not-found-error";
 import { DuplicateUserError } from "./errors/duplicate-user-error";
 import { UserHasOpenRentError } from "./errors/user-has-open-rent-error";
-import { FindOptions } from "sequelize";
+import { FindOptions } from 'sequelize'
 import { IUserRepo } from "./interfaces/IUserRepo";
 import { IBikeRepo } from "./interfaces/IBikeRepo";
 import { IRentRepo } from "./interfaces/IRentRepo";
@@ -70,9 +70,21 @@ export class App {
             email
         }
 
-        await this.userRepo.remove(email)
+        await this.userRepo.remove(whereOptions)
     }
     
+    async removeBike(id: string): Promise<void> {
+        await this.findBike(id)
+        if ((await this.rentRepo.findOpenFor(id)).length > 0) {
+            throw new UserHasOpenRentError()
+        }
+        const whereOptions: any = {
+            id
+        }
+
+        await this.bikeRepo.remove(whereOptions)
+    }
+
     async rentBike(bikeId: string, userEmail: string): Promise<Rent> {
         const bike = await this.findBike(bikeId)
         if (!bike.available) {
